@@ -139,4 +139,3 @@ ngrok http 5000
 **Render "Application failed"** — Check `GOOGLE_API_KEY` env var is set in Render dashboard.
 
 **Camera not working on Render mobile** — Render gives you HTTPS automatically, so phone cameras should work. If denied, check phone Safari/Chrome camera permissions.
-# RookWatch
