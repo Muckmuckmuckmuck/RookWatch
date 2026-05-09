@@ -379,11 +379,11 @@ CHUNK BREAKDOWN:
 
 Return ONLY valid JSON, no markdown:
 {{
-  "headline": "One-sentence headline summarizing the whole shift",
+  "headline": "One-sentence headline summarizing the whole shift (under 12 words)",
   "narrative": "2-3 paragraph professional narrative describing what got done, in chronological flow",
-  "highlights": ["3-5 specific accomplishments worth calling out"],
-  "productivity_score": "0-100 score with brief reason",
-  "improvement_areas": ["constructive suggestions for next shift, if any"]
+  "highlights": ["3-5 specific accomplishments worth calling out, each one short"],
+  "productivity_score": <integer between 0 and 100>,
+  "improvement_areas": ["constructive suggestions for next shift, only if genuinely warranted, otherwise empty array"]
 }}"""
 
     try:

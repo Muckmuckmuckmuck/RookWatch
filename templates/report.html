@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RookWatch · Shift Report</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1815'/><text x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='900' font-size='18' fill='%23d04a2a'>R</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -38,7 +39,22 @@ html, body {
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+body { animation: pageFadeIn 0.5s ease; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 100px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+* { scrollbar-width: thin; scrollbar-color: var(--line) var(--bg); }
+::selection { background: var(--accent); color: var(--paper); }
 
 .shell {
   max-width: 1200px;
@@ -82,10 +98,18 @@ header {
   color: var(--ink-2);
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--ink-3);
-  padding-bottom: 2px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.back-link:hover { color: var(--accent); border-color: var(--accent); }
+.back-link:hover {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
 
 /* ─── REPORT TITLE ─── */
 .report-title {
@@ -138,12 +162,22 @@ header {
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 24px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(26, 24, 21, 0.06);
+  border-color: var(--ink-3);
 }
 
 .hero-card.primary {
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
+}
+.hero-card.primary:hover {
+  border-color: var(--ink);
+  box-shadow: 0 12px 28px rgba(26, 24, 21, 0.18);
 }
 
 .hero-label {
@@ -214,6 +248,11 @@ header {
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 24px;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.chart-card:hover {
+  box-shadow: 0 6px 18px rgba(26, 24, 21, 0.05);
+  border-color: var(--ink-3);
 }
 
 .chart-title {
@@ -272,9 +311,16 @@ header {
   display: grid;
   grid-template-columns: 100px 1fr auto;
   gap: 20px;
-  padding: 18px 0;
+  padding: 18px 12px;
   border-bottom: 1px solid var(--line-2);
   align-items: flex-start;
+  border-radius: 4px;
+  transition: background 0.2s ease, padding-left 0.2s ease;
+  margin: 0 -12px;
+}
+.timeline-item:hover {
+  background: var(--paper);
+  padding-left: 16px;
 }
 
 .timeline-time {
@@ -331,6 +377,7 @@ header {
 }
 
 .btn {
+  position: relative;
   padding: 12px 22px;
   border: 1px solid var(--ink);
   background: var(--paper);
@@ -340,21 +387,131 @@ header {
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s;
+  overflow: hidden;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+  outline: none;
 }
 
-.btn:hover { background: var(--ink); color: var(--paper); }
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+.btn:hover::before { left: 100%; }
+
+.btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 24, 21, 0.18);
+}
+.btn:active { transform: translateY(0); transition-duration: 0.05s; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .btn-danger { border-color: var(--red); color: var(--red); }
-.btn-danger:hover { background: var(--red); color: white; }
+.btn-danger:hover {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+  box-shadow: 0 4px 14px rgba(184, 54, 46, 0.3);
+}
 
 @media print {
   body { background: white; }
   .actions, .back-link { display: none; }
   .chart-card { break-inside: avoid; }
 }
+/* ═══════════════════════════════════════════════════════════
+   MOBILE / iPHONE RESPONSIVE STYLES
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  .shell { padding: 16px 14px 60px; }
+
+  /* Header stacks */
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .brand-mark { font-size: 28px; }
+  .brand-tag { font-size: 9px; }
+  .back-link { font-size: 10px; }
+
+  /* Title smaller */
+  .report-title { margin-bottom: 24px; }
+  .report-title h1 { font-size: 38px; line-height: 1.05; letter-spacing: -1.2px; }
+  .report-title .kicker { font-size: 9px; letter-spacing: 2px; }
+  .report-meta {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  /* AI Summary card padding shrink */
+  #ai-summary-card { padding: 22px 18px !important; margin-bottom: 24px !important; }
+  #summary-headline { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 14px !important; }
+  #summary-narrative { font-size: 13px !important; line-height: 1.6 !important; }
+  #summary-score { font-size: 38px !important; }
+
+  /* Hero stats — single column on phone */
+  .hero-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .hero-card { padding: 16px 16px; }
+  .hero-card.primary { grid-column: 1 / -1; }
+  .hero-value { font-size: 44px; letter-spacing: -1.2px; }
+  .hero-value.small { font-size: 32px; }
+  .hero-value .currency { font-size: 22px; top: 4px; }
+  .hero-card .small { font-size: 32px; }
+  .hero-label { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .hero-sub { font-size: 11px; margin-top: 6px; }
+
+  /* Charts — single column */
+  .charts-grid { grid-template-columns: 1fr !important; gap: 12px; margin-bottom: 24px; }
+  .chart-card { padding: 18px; }
+  .chart-title { font-size: 18px; }
+  .chart-sub { font-size: 9px; margin-bottom: 14px; }
+  .chart-wrap { height: 200px; }
+
+  /* Section heads */
+  .section-block { margin-bottom: 24px; }
+  .section-head h2 { font-size: 22px; }
+  .section-count { font-size: 9px; }
+
+  /* Timeline rows */
+  .timeline-item {
+    grid-template-columns: 70px 1fr auto;
+    gap: 10px;
+    padding: 12px 0;
+  }
+  .timeline-time { font-size: 10px; }
+  .timeline-task { font-size: 13px; }
+  .timeline-detail { font-size: 11px; }
+  .timeline-value { font-size: 18px; }
+
+  /* Actions */
+  .actions { flex-direction: column; gap: 10px; }
+  .actions .btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .report-title h1 { font-size: 32px; }
+  .hero-value { font-size: 38px; }
+  .hero-value.small { font-size: 26px; }
+  .brand-mark { font-size: 24px; }
+}
+
 </style>
 </head>
 <body>
@@ -534,8 +691,15 @@ function destroyCharts() {
 }
 
 async function fetchAndRender() {
-  const res = await fetch('/status');
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch('/status');
+    if (!res.ok) throw new Error('Status request failed: ' + res.status);
+    data = await res.json();
+  } catch (e) {
+    console.error('fetchAndRender error:', e);
+    return;
+  }
 
   // Header
   document.getElementById('generated-time').textContent = new Date().toLocaleString('en-US', {
@@ -790,16 +954,25 @@ function renderTimeline(chunks) {
 
 async function resetSession() {
   if (!confirm('Reset shift? All chunks and analyses will be deleted.')) return;
-  await fetch('/reset', { method: 'POST' });
-  setTimeout(fetchAndRender, 200);
+  try {
+    const res = await fetch('/reset', { method: 'POST' });
+    if (!res.ok) throw new Error('Reset failed: ' + res.status);
+    setTimeout(fetchAndRender, 200);
+  } catch (e) {
+    alert('Could not reset session — check the server is running.');
+    console.error(e);
+  }
 }
 
 let summaryLoaded = false;
+let summaryInFlight = false;
 async function loadSummary(forceReload) {
+  if (summaryInFlight) return;       // already loading — prevent double-clicks
   const card = document.getElementById('ai-summary-card');
   if (forceReload) summaryLoaded = false;
   if (summaryLoaded) return;
 
+  summaryInFlight = true;
   try {
     const statusRes = await fetch('/status');
     const statusData = await statusRes.json();
@@ -818,13 +991,16 @@ async function loadSummary(forceReload) {
     document.getElementById('summary-score').textContent = data.productivity_score || '—';
 
     const hl = document.getElementById('summary-highlights');
-    hl.innerHTML = (data.highlights || []).map(h => `<li style="padding-left:18px;position:relative;margin-bottom:4px">→<span style="position:absolute;left:0;color:var(--accent)">·</span>&nbsp;${h}</li>`).join('') || '<li style="opacity:0.5;font-style:italic">No specific highlights noted.</li>';
+    const items = data.highlights || [];
+    hl.innerHTML = items.length > 0
+      ? items.map(h => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:var(--accent)">·</span>${h}</li>`).join('')
+      : '<li style="opacity:0.5;font-style:italic">No specific highlights noted.</li>';
 
     const impArea = document.getElementById('summary-improvements');
     const impList = document.getElementById('summary-improvements-list');
     if (data.improvement_areas && data.improvement_areas.length > 0) {
       impArea.style.display = 'block';
-      impList.innerHTML = data.improvement_areas.map(s => `<li style="padding-left:18px;position:relative;margin-bottom:4px">·&nbsp;${s}</li>`).join('');
+      impList.innerHTML = data.improvement_areas.map(s => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:rgba(250,248,243,0.5)">·</span>${s}</li>`).join('');
     } else {
       impArea.style.display = 'none';
     }
@@ -833,6 +1009,8 @@ async function loadSummary(forceReload) {
   } catch (e) {
     document.getElementById('summary-headline').textContent = 'Could not generate summary';
     console.error(e);
+  } finally {
+    summaryInFlight = false;
   }
 }
 
