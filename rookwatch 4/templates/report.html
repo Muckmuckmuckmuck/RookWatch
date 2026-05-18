@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RookWatch · Shift Report</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1815'/><text x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='900' font-size='18' fill='%23d04a2a'>R</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f4f1ea;
+  --paper: #faf8f3;
+  --ink: #1a1815;
+  --ink-2: #4a4640;
+  --ink-3: #8a8377;
+  --line: #d4cfc4;
+  --line-2: #e8e3d6;
+  --accent: #d04a2a;
+  --accent-soft: #f4dcd2;
+  --green: #4a8a3f;
+  --green-soft: #e8f0e3;
+  --amber: #c08a2e;
+  --amber-soft: #f5e9d0;
+  --red: #b8362e;
+  --red-soft: #f6e0dd;
+  --blue: #3a6e8f;
+  --blue-soft: #dee9f1;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body { animation: pageFadeIn 0.5s ease; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 100px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+* { scrollbar-width: thin; scrollbar-color: var(--line) var(--bg); }
+::selection { background: var(--accent); color: var(--paper); }
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 32px 80px;
+}
+
+/* ─── HEADER ─── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-mark {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 36px;
+  letter-spacing: -1.2px;
+  line-height: 1;
+}
+.brand-mark em { color: var(--accent); }
+
+.brand-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.back-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--ink-2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.back-link:hover {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* ─── REPORT TITLE ─── */
+.report-title {
+  margin-bottom: 36px;
+}
+
+.report-title .kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+
+.report-title h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 64px;
+  letter-spacing: -2px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.report-title h1 em { color: var(--accent); }
+
+.report-meta {
+  display: flex;
+  gap: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.report-meta strong { color: var(--ink); }
+
+/* ─── HERO STATS ─── */
+.hero-stats {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.hero-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 24px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(26, 24, 21, 0.06);
+  border-color: var(--ink-3);
+}
+
+.hero-card.primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.hero-card.primary:hover {
+  border-color: var(--ink);
+  box-shadow: 0 12px 28px rgba(26, 24, 21, 0.18);
+}
+
+.hero-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+
+.hero-card.primary .hero-label { color: rgba(250,248,243,0.5); }
+
+.hero-value {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 64px;
+  letter-spacing: -2px;
+  line-height: 0.95;
+  color: var(--ink);
+}
+
+.hero-card.primary .hero-value { color: var(--paper); }
+
+.hero-value .currency {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 300;
+  vertical-align: top;
+  margin-right: 4px;
+  color: var(--ink-3);
+  position: relative;
+  top: 8px;
+}
+
+.hero-card.primary .hero-value .currency { color: rgba(250,248,243,0.5); }
+
+.hero-card .small {
+  font-family: 'Fraunces', serif;
+  font-size: 38px;
+}
+
+.hero-sub {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.hero-card.primary .hero-sub { color: rgba(250,248,243,0.6); }
+
+/* ─── CHARTS GRID ─── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .hero-stats  { grid-template-columns: repeat(2, 1fr); }
+}
+
+.chart-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 24px;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.chart-card:hover {
+  box-shadow: 0 6px 18px rgba(26, 24, 21, 0.05);
+  border-color: var(--ink-3);
+}
+
+.chart-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.chart-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 240px;
+}
+
+/* ─── TIMELINE ─── */
+.section-block {
+  margin-bottom: 36px;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-head h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+
+.section-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 1.5px;
+}
+
+/* timeline item */
+.timeline-item {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 20px;
+  padding: 18px 12px;
+  border-bottom: 1px solid var(--line-2);
+  align-items: flex-start;
+  border-radius: 4px;
+  transition: background 0.2s ease, padding-left 0.2s ease;
+  margin: 0 -12px;
+}
+.timeline-item:hover {
+  background: var(--paper);
+  padding-left: 16px;
+}
+
+.timeline-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  padding-top: 4px;
+  letter-spacing: 1px;
+}
+
+.timeline-body {
+  font-family: 'Inter', sans-serif;
+}
+
+.timeline-task {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.timeline-detail {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.timeline-value {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--green);
+  font-weight: 500;
+  text-align: right;
+}
+
+.empty-state {
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 60px 20px;
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-3);
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+}
+
+/* ─── ACTIONS ─── */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  position: relative;
+  padding: 12px 22px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+  outline: none;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+.btn:hover::before { left: 100%; }
+
+.btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 24, 21, 0.18);
+}
+.btn:active { transform: translateY(0); transition-duration: 0.05s; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+  box-shadow: 0 4px 14px rgba(184, 54, 46, 0.3);
+}
+
+@media print {
+  body { background: white; }
+  .actions, .back-link { display: none; }
+  .chart-card { break-inside: avoid; }
+}
+/* ═══════════════════════════════════════════════════════════
+   MOBILE / iPHONE RESPONSIVE STYLES
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  .shell { padding: 16px 14px 60px; }
+
+  /* Header stacks */
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .brand-mark { font-size: 28px; }
+  .brand-tag { font-size: 9px; }
+  .back-link { font-size: 10px; }
+
+  /* Title smaller */
+  .report-title { margin-bottom: 24px; }
+  .report-title h1 { font-size: 38px; line-height: 1.05; letter-spacing: -1.2px; }
+  .report-title .kicker { font-size: 9px; letter-spacing: 2px; }
+  .report-meta {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  /* AI Summary card padding shrink */
+  #ai-summary-card { padding: 22px 18px !important; margin-bottom: 24px !important; }
+  #summary-headline { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 14px !important; }
+  #summary-narrative { font-size: 13px !important; line-height: 1.6 !important; }
+  #summary-score { font-size: 38px !important; }
+
+  /* Hero stats — single column on phone */
+  .hero-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .hero-card { padding: 16px 16px; }
+  .hero-card.primary { grid-column: 1 / -1; }
+  .hero-value { font-size: 44px; letter-spacing: -1.2px; }
+  .hero-value.small { font-size: 32px; }
+  .hero-value .currency { font-size: 22px; top: 4px; }
+  .hero-card .small { font-size: 32px; }
+  .hero-label { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .hero-sub { font-size: 11px; margin-top: 6px; }
+
+  /* Charts — single column */
+  .charts-grid { grid-template-columns: 1fr !important; gap: 12px; margin-bottom: 24px; }
+  .chart-card { padding: 18px; }
+  .chart-title { font-size: 18px; }
+  .chart-sub { font-size: 9px; margin-bottom: 14px; }
+  .chart-wrap { height: 200px; }
+
+  /* Section heads */
+  .section-block { margin-bottom: 24px; }
+  .section-head h2 { font-size: 22px; }
+  .section-count { font-size: 9px; }
+
+  /* Timeline rows */
+  .timeline-item {
+    grid-template-columns: 70px 1fr auto;
+    gap: 10px;
+    padding: 12px 0;
+  }
+  .timeline-time { font-size: 10px; }
+  .timeline-task { font-size: 13px; }
+  .timeline-detail { font-size: 11px; }
+  .timeline-value { font-size: 18px; }
+
+  /* Actions */
+  .actions { flex-direction: column; gap: 10px; }
+  .actions .btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .report-title h1 { font-size: 32px; }
+  .hero-value { font-size: 38px; }
+  .hero-value.small { font-size: 26px; }
+  .brand-mark { font-size: 24px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <header>
+    <div>
+      <div class="brand-mark">Rook<em>Watch</em></div>
+      <div class="brand-tag">Shift Report</div>
+    </div>
+    <a href="/demo" class="back-link">← Back to Recording</a>
+  </header>
+
+  <!-- TITLE -->
+  <div class="report-title">
+    <div class="kicker">Generated <span id="generated-time">·</span></div>
+    <h1>Today's <em>shift</em> report</h1>
+    <div class="report-meta">
+      <span>Started: <strong id="meta-start">·</strong></span>
+      <span>Duration: <strong id="meta-duration">·</strong></span>
+      <span>Status: <strong id="meta-status">In Progress</strong></span>
+    </div>
+  </div>
+
+  <!-- AI SHIFT SUMMARY -->
+  <div id="ai-summary-card" style="display:none;background:var(--ink);color:var(--paper);border-radius:4px;padding:32px 36px;margin-bottom:36px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;right:0;width:300px;height:300px;background:radial-gradient(circle,rgba(208,74,42,0.25),transparent 70%);pointer-events:none"></div>
+    <div style="position:relative;z-index:1">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(250,248,243,0.4);margin-bottom:12px;text-transform:uppercase">AI Shift Summary</div>
+      <h2 id="summary-headline" style="font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:32px;letter-spacing:-0.8px;line-height:1.15;margin-bottom:20px;color:var(--paper)">Generating summary…</h2>
+      <div id="summary-narrative" style="font-size:14px;line-height:1.7;color:rgba(250,248,243,0.85);max-width:780px;margin-bottom:24px"></div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:rgba(250,248,243,0.4);margin-bottom:8px">PRODUCTIVITY SCORE</div>
+          <div id="summary-score" style="font-family:'Fraunces',serif;font-style:italic;font-size:48px;color:var(--accent);line-height:1">·</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:rgba(250,248,243,0.4);margin-bottom:8px">HIGHLIGHTS</div>
+          <ul id="summary-highlights" style="list-style:none;padding:0;font-size:13px;line-height:1.7;color:rgba(250,248,243,0.9)"></ul>
+        </div>
+      </div>
+
+      <div id="summary-improvements" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid rgba(250,248,243,0.1)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">CONSTRUCTIVE SUGGESTIONS</div>
+        <ul id="summary-improvements-list" style="list-style:none;padding:0;font-size:13px;line-height:1.7;color:rgba(250,248,243,0.7)"></ul>
+      </div>
+
+      <button onclick="loadSummary(true)" style="margin-top:20px;padding:8px 16px;background:transparent;border:1px solid rgba(250,248,243,0.3);color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;cursor:pointer">↻ Regenerate</button>
+    </div>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats">
+
+    <div class="hero-card primary">
+      <div class="hero-label">Total Value Generated</div>
+      <div class="hero-value">
+        <span class="currency">$</span><span id="h-value">0</span>
+      </div>
+      <div class="hero-sub">Across <span id="h-tasks">0</span> verified tasks · <span id="h-chunks">0</span> chunks</div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-label">Hourly Rate</div>
+      <div class="hero-value small">
+        <span class="currency">$</span><span id="h-hourly">0</span>
+      </div>
+      <div class="hero-sub" id="h-hourly-sub">Estimated</div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-label">Active Time</div>
+      <div class="hero-value small"><span id="h-active">0</span><span style="font-size:18px;color:var(--ink-3)">m</span></div>
+      <div class="hero-sub">Working motion detected</div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-label">API Cost</div>
+      <div class="hero-value small">
+        <span class="currency">$</span><span id="h-cost">0.000</span>
+      </div>
+      <div class="hero-sub">Total spent on AI</div>
+    </div>
+
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Value over time</div>
+      <div class="chart-sub">Cumulative dollar value per chunk</div>
+      <div class="chart-wrap">
+        <canvas id="value-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Tasks by category</div>
+      <div class="chart-sub">Distribution of work types</div>
+      <div class="chart-wrap">
+        <canvas id="category-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Active vs idle</div>
+      <div class="chart-sub">Time breakdown per chunk</div>
+      <div class="chart-wrap">
+        <canvas id="activity-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Quality grade</div>
+      <div class="chart-sub">Distribution of chunk quality ratings</div>
+      <div class="chart-wrap">
+        <canvas id="quality-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section-block">
+    <div class="section-head">
+      <h2>Task Timeline</h2>
+      <span class="section-count" id="timeline-count">0 TASKS</span>
+    </div>
+    <div id="timeline-container">
+      <div class="empty-state">No tasks recorded yet. Start a recording to populate this timeline.</div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn" onclick="window.print()">↧ Export / Print</button>
+    <button class="btn btn-danger" onclick="resetSession()">⟲ Reset Session</button>
+  </div>
+
+</div>
+
+<script>
+const COLORS = {
+  primary: '#d04a2a',
+  green:   '#4a8a3f',
+  amber:   '#c08a2e',
+  blue:    '#3a6e8f',
+  ink:     '#1a1815',
+  red:     '#b8362e',
+  ink3:    '#8a8377',
+};
+
+const CAT_COLORS = {
+  construction: '#d04a2a',
+  service:      '#c08a2e',
+  office:       '#3a6e8f',
+  study:        '#7a4ea5',
+  healthcare:   '#b8362e',
+  retail:       '#2e8a8a',
+  general:      '#4a8a3f',
+  electrical:   '#c08a2e',
+  plumbing:     '#3a6e8f',
+  machinery:    '#1a1815',
+  other:        '#8a8377',
+};
+
+let charts = {};
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => c.destroy && c.destroy());
+  charts = {};
+  // Clear any leftover empty-state overlays
+  document.querySelectorAll('.empty-overlay').forEach(el => el.remove());
+}
+
+async function fetchAndRender() {
+  let data;
+  try {
+    const res = await fetch('/status');
+    if (!res.ok) throw new Error('Status request failed: ' + res.status);
+    data = await res.json();
+  } catch (e) {
+    console.error('fetchAndRender error:', e);
+    return;
+  }
+
+  // Header
+  document.getElementById('generated-time').textContent = new Date().toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+  });
+
+  if (data.shift_start) {
+    const start = new Date(data.shift_start);
+    document.getElementById('meta-start').textContent = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const durMin = data.total_video_seconds / 60;
+    document.getElementById('meta-duration').textContent = `${Math.floor(durMin)} min recorded`;
+  }
+
+  document.getElementById('meta-status').textContent = data.shift_ended ? 'COMPLETED' : 'IN PROGRESS';
+  document.getElementById('meta-status').style.color = data.shift_ended ? COLORS.green : COLORS.amber;
+
+  // Hero stats
+  document.getElementById('h-value').textContent = data.total_value.toFixed(0);
+  document.getElementById('h-chunks').textContent = data.chunk_count;
+  document.getElementById('h-cost').textContent = data.total_cost.toFixed(4);
+
+  const allTasks = data.chunks.flatMap(c => c.tasks || []);
+  document.getElementById('h-tasks').textContent = allTasks.length;
+
+  const minutes = data.total_video_seconds / 60;
+  if (minutes >= 5) {
+    const hours = data.total_video_seconds / 3600;
+    const hourly = Math.round(data.total_value / hours);
+    document.getElementById('h-hourly').textContent = hourly;
+    document.getElementById('h-hourly-sub').textContent = 'Estimated';
+  } else {
+    document.getElementById('h-hourly').textContent = '·';
+    document.getElementById('h-hourly-sub').textContent = `Need ${(5 - minutes).toFixed(1)} more min for estimate`;
+  }
+
+  const activeSecs = data.chunks.reduce((sum, c) => sum + (c.active_seconds || 0), 0);
+  document.getElementById('h-active').textContent = Math.floor(activeSecs / 60);
+
+  destroyCharts();
+  renderValueChart(data.chunks);
+  renderCategoryChart(data.chunks);
+  renderActivityChart(data.chunks);
+  renderQualityChart(data.chunks);
+  renderTimeline(data.chunks);
+}
+
+function renderValueChart(chunks) {
+  const ctx = document.getElementById('value-chart');
+  if (chunks.length === 0) {
+    drawEmptyChart(ctx);
+    return;
+  }
+  let cumulative = 0;
+  const labels = chunks.map((c, i) => `Chunk ${i + 1}`);
+  const cumData = chunks.map(c => { cumulative += c.total_value || 0; return cumulative; });
+  const perChunkData = chunks.map(c => c.total_value || 0);
+
+  charts.value = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Cumulative Value',
+          data: cumData,
+          borderColor: COLORS.primary,
+          backgroundColor: 'rgba(208,74,42,0.08)',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: COLORS.primary,
+          pointBorderColor: '#faf8f3',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Per Chunk',
+          data: perChunkData,
+          borderColor: COLORS.green,
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          borderWidth: 1.5,
+          borderDash: [4,4],
+          pointRadius: 3,
+          pointBackgroundColor: COLORS.green,
+        }
+      ]
+    },
+    options: getLineOpts('$')
+  });
+}
+
+function renderCategoryChart(chunks) {
+  const ctx = document.getElementById('category-chart');
+  const allTasks = chunks.flatMap(c => c.tasks || []);
+  if (allTasks.length === 0) { drawEmptyChart(ctx); return; }
+
+  const counts = {};
+  allTasks.forEach(t => {
+    const cat = t.category || 'other';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+
+  const labels = Object.keys(counts);
+  const values = Object.values(counts);
+  const bgs = labels.map(l => CAT_COLORS[l] || COLORS.ink3);
+
+  charts.category = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: bgs, borderColor: '#faf8f3', borderWidth: 3 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink, padding: 12 }
+        }
+      },
+      cutout: '60%'
+    }
+  });
+}
+
+function renderActivityChart(chunks) {
+  const ctx = document.getElementById('activity-chart');
+  if (chunks.length === 0) { drawEmptyChart(ctx); return; }
+
+  const labels = chunks.map((c, i) => `${i + 1}`);
+  const active = chunks.map(c => Math.round((c.active_seconds || 0) / 60 * 10) / 10);
+  const idle   = chunks.map(c => Math.round((c.idle_seconds || 0) / 60 * 10) / 10);
+
+  charts.activity = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Active (min)', data: active, backgroundColor: COLORS.green, borderRadius: 2 },
+        { label: 'Idle (min)',   data: idle,   backgroundColor: COLORS.amber, borderRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink, padding: 10 }}
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink3 }},
+        y: { stacked: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink3 }}
+      }
+    }
+  });
+}
+
+function renderQualityChart(chunks) {
+  const ctx = document.getElementById('quality-chart');
+  if (chunks.length === 0) { drawEmptyChart(ctx); return; }
+
+  const counts = { excellent: 0, standard: 0, needs_attention: 0 };
+  chunks.forEach(c => {
+    const q = c.overall_quality || 'standard';
+    if (counts[q] !== undefined) counts[q]++;
+  });
+
+  charts.quality = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Excellent', 'Standard', 'Needs Review'],
+      datasets: [{
+        data: [counts.excellent, counts.standard, counts.needs_attention],
+        backgroundColor: [COLORS.green, COLORS.blue, COLORS.red],
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink3, stepSize: 1 }},
+        y: { grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 11 }, color: COLORS.ink }}
+      }
+    }
+  });
+}
+
+function getLineOpts(prefix) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink, padding: 10 }}
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink3 }},
+      y: {
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: COLORS.ink3,
+                 callback: function(v){ return (prefix || '') + v; }}
+      }
+    }
+  };
+}
+
+function drawEmptyChart(canvas) {
+  // Show empty state via parent element overlay rather than canvas drawing
+  // (canvas dimensions are managed by Chart.js and unreliable here)
+  const wrap = canvas.parentElement;
+  if (!wrap.querySelector('.empty-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'empty-overlay';
+    overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-style:italic;font-size:14px;color:#8a8377;pointer-events:none;';
+    overlay.textContent = 'No data yet';
+    wrap.appendChild(overlay);
+  }
+}
+
+function clearEmptyChartOverlay(canvas) {
+  const overlay = canvas.parentElement.querySelector('.empty-overlay');
+  if (overlay) overlay.remove();
+}
+
+// Escape HTML entities to prevent any injection from AI/server output
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderTimeline(chunks) {
+  const allTasks = [];
+  chunks.forEach((c, ci) => {
+    (c.tasks || []).forEach(t => {
+      allTasks.push({ ...t, chunk_time: c.timestamp, chunk_index: ci + 1 });
+    });
+  });
+
+  const container = document.getElementById('timeline-container');
+  document.getElementById('timeline-count').textContent = allTasks.length + ' TASKS';
+
+  if (allTasks.length === 0) {
+    container.innerHTML = '<div class="empty-state">No tasks recorded yet. Start a recording to populate this timeline.</div>';
+    return;
+  }
+
+  container.innerHTML = allTasks.map(t => `
+    <div class="timeline-item">
+      <div class="timeline-time">${esc(t.chunk_time) || '·'}<br><small style="color:var(--ink-3)">chunk ${t.chunk_index}</small></div>
+      <div class="timeline-body">
+        <div class="timeline-task">${esc(t.name)}</div>
+        <div class="timeline-detail">${esc(t.details)}</div>
+      </div>
+      <div class="timeline-value">$${(t.dollar_value || 0).toFixed(0)}</div>
+    </div>
+  `).join('');
+}
+
+async function resetSession() {
+  if (!confirm('Reset shift? All chunks and analyses will be deleted.')) return;
+  try {
+    const res = await fetch('/reset', { method: 'POST' });
+    if (!res.ok) throw new Error('Reset failed: ' + res.status);
+    setTimeout(fetchAndRender, 200);
+  } catch (e) {
+    alert('Could not reset session. Check the server is running.');
+    console.error(e);
+  }
+}
+
+let summaryLoaded = false;
+let summaryInFlight = false;
+async function loadSummary(forceReload) {
+  if (summaryInFlight) return;       // already loading — prevent double-clicks
+  const card = document.getElementById('ai-summary-card');
+  if (forceReload) summaryLoaded = false;
+  if (summaryLoaded) return;
+
+  summaryInFlight = true;
+  try {
+    const statusRes = await fetch('/status');
+    const statusData = await statusRes.json();
+    if (statusData.chunk_count === 0) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+    document.getElementById('summary-headline').textContent = 'Generating AI summary…';
+
+    const res = await fetch('/shift_summary');
+    const data = await res.json();
+
+    document.getElementById('summary-headline').textContent = data.headline || 'Shift complete';
+    document.getElementById('summary-narrative').textContent = data.narrative || '';
+    document.getElementById('summary-score').textContent = data.productivity_score || '·';
+
+    const hl = document.getElementById('summary-highlights');
+    const items = data.highlights || [];
+    hl.innerHTML = items.length > 0
+      ? items.map(h => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:var(--accent)">·</span>${esc(h)}</li>`).join('')
+      : '<li style="opacity:0.5;font-style:italic">No specific highlights noted.</li>';
+
+    const impArea = document.getElementById('summary-improvements');
+    const impList = document.getElementById('summary-improvements-list');
+    if (data.improvement_areas && data.improvement_areas.length > 0) {
+      impArea.style.display = 'block';
+      impList.innerHTML = data.improvement_areas.map(s => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:rgba(250,248,243,0.5)">·</span>${esc(s)}</li>`).join('');
+    } else {
+      impArea.style.display = 'none';
+    }
+
+    summaryLoaded = true;
+  } catch (e) {
+    document.getElementById('summary-headline').textContent = 'Could not generate summary';
+    console.error(e);
+  } finally {
+    summaryInFlight = false;
+  }
+}
+
+fetchAndRender();
+setInterval(fetchAndRender, 6000);
+// Load AI summary once data is in
+setTimeout(loadSummary, 1500);
+</script>
+</body>
+</html>
