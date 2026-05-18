@@ -1451,7 +1451,7 @@ header {
       <div class="summary-grid">
         <div>
           <div class="summary-mini-label">PRODUCTIVITY</div>
-          <div id="summary-score" class="summary-score">—</div>
+          <div id="summary-score" class="summary-score">·</div>
         </div>
         <div>
           <div class="summary-mini-label">HIGHLIGHTS</div>
@@ -1780,7 +1780,7 @@ function submitNow() {
 function endShift() {
   if (!confirm('End the current shift? Your final clip will be uploaded for analysis.')) return;
   pendingFinal = true;
-  showToast('Ending shift — submitting final clip…', 'success');
+  showToast('Ending shift, submitting final clip…', 'success');
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
   }
@@ -1803,7 +1803,7 @@ function finalizeShift() {
   document.getElementById('status-msg').textContent = 'Shift complete · view full report';
   if (nextUploadTimer) clearInterval(nextUploadTimer);
   if (recordClockTimer) clearInterval(recordClockTimer);
-  showToast('Shift ended — full report ready', 'success');
+  showToast('Shift ended. Full report ready.', 'success');
 }
 
 // ─── COUNTDOWNS ─────────────────────────────────────────────
@@ -1871,7 +1871,7 @@ async function uploadChunk(blob, duration, isFinal) {
       showToast('Analysis error: ' + (data.error || 'unknown'), 'error');
     }
   } catch (e) {
-    showToast('Network error — check connection', 'error');
+    showToast('Network error. Check connection.', 'error');
     console.error(e);
   }
 
@@ -1915,7 +1915,7 @@ async function refreshStatus() {
       const hourly = Math.round(data.total_value / hours);
       setStatValue('stat-hourly', hourly, '.mini-stat-val');
     } else {
-      setStatValue('stat-hourly', '—');
+      setStatValue('stat-hourly', '·');
     }
 
     // Tasks count
@@ -2075,19 +2075,19 @@ async function loadShiftSummary(forceRefresh) {
 
     document.getElementById('summary-headline').textContent = data.headline || 'Shift in progress';
     document.getElementById('summary-narrative').textContent = data.narrative || '';
-    document.getElementById('summary-score').textContent = data.productivity_score || '—';
+    document.getElementById('summary-score').textContent = data.productivity_score || '·';
 
     const hl = document.getElementById('summary-highlights');
     const items = data.highlights || [];
     hl.innerHTML = items.length > 0
-      ? items.map(h => `<li>${h}</li>`).join('')
+      ? items.map(h => `<li>${esc(h)}</li>`).join('')
       : '<li style="opacity:0.5;font-style:italic">No specific highlights yet.</li>';
 
     const impBlock = document.getElementById('summary-improvements-block');
     const impList = document.getElementById('summary-improvements-list');
     if (data.improvement_areas && data.improvement_areas.length > 0) {
       impBlock.style.display = 'block';
-      impList.innerHTML = data.improvement_areas.map(s => `<li>${s}</li>`).join('');
+      impList.innerHTML = data.improvement_areas.map(s => `<li>${esc(s)}</li>`).join('');
     } else {
       impBlock.style.display = 'none';
     }
@@ -2099,6 +2099,17 @@ async function loadShiftSummary(forceRefresh) {
   } finally {
     summaryInFlight = false;
   }
+}
+
+// Escape HTML entities to prevent any injection from AI/server output
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function renderChunks(chunks) {
@@ -2119,25 +2130,25 @@ function renderChunks(chunks) {
             <div class="chunk-head-left">
               <div class="chunk-num">${String(idx).padStart(2,'0')}</div>
               <div class="chunk-meta">
-                <div class="chunk-time">${c.timestamp || ''}</div>
+                <div class="chunk-time">${esc(c.timestamp)}</div>
                 <div class="chunk-duration">${(c.duration_seconds || 0).toFixed(0)}s clip</div>
               </div>
             </div>
           </div>
-          <div class="chunk-error">⚠ ${c.error}</div>
+          <div class="chunk-error">⚠ ${esc(c.error)}</div>
         </div>`;
     }
 
     const tasksHtml = (c.tasks || []).map(t => `
       <div class="task-row">
-        <div class="task-time">${t.start_time || ''}</div>
-        <div class="task-name">${t.name}<small>${t.details || ''}</small></div>
+        <div class="task-time">${esc(t.start_time)}</div>
+        <div class="task-name">${esc(t.name)}<small>${esc(t.details)}</small></div>
         <div class="task-value">$${(t.dollar_value || 0).toFixed(0)}</div>
       </div>
     `).join('');
 
     const flagsHtml = (c.flags && c.flags.length > 0)
-      ? `<div class="flag-list">${c.flags.map(f => `<div class="flag-item">⚑ ${f}</div>`).join('')}</div>`
+      ? `<div class="flag-list">${c.flags.map(f => `<div class="flag-item">⚑ ${esc(f)}</div>`).join('')}</div>`
       : '';
 
     return `
@@ -2146,8 +2157,8 @@ function renderChunks(chunks) {
           <div class="chunk-head-left">
             <div class="chunk-num">${String(idx).padStart(2,'0')}</div>
             <div class="chunk-meta">
-              <div class="chunk-time">${c.timestamp || ''}</div>
-              <div class="chunk-duration">${(c.duration_seconds || 0).toFixed(0)}s clip · analyzed in ${c.analyzed_at || '—'}</div>
+              <div class="chunk-time">${esc(c.timestamp)}</div>
+              <div class="chunk-duration">${(c.duration_seconds || 0).toFixed(0)}s clip · analyzed in ${esc(c.analyzed_at) || '·'}</div>
             </div>
           </div>
           <div class="chunk-tags">
@@ -2157,7 +2168,7 @@ function renderChunks(chunks) {
           </div>
         </div>
 
-        <div class="chunk-summary">${c.summary || 'No summary available'}</div>
+        <div class="chunk-summary">${esc(c.summary) || 'No summary available'}</div>
 
         ${tasksHtml ? `<div class="chunk-tasks">${tasksHtml}</div>` : ''}
 
@@ -2166,7 +2177,7 @@ function renderChunks(chunks) {
         <div class="chunk-stats">
           <div class="cs"><span>VALUE</span><strong>$${(c.total_value || 0).toFixed(0)}</strong></div>
           <div class="cs amber"><span>ACTIVE</span><strong>${Math.floor((c.active_seconds || 0))}s</strong></div>
-          <div class="cs"><span>QUALITY</span><strong style="text-transform:capitalize">${c.overall_quality || '—'}</strong></div>
+          <div class="cs"><span>QUALITY</span><strong style="text-transform:capitalize">${esc(c.overall_quality) || '·'}</strong></div>
           <div class="cs accent"><span>API COST</span><strong>$${(c.estimated_cost || 0).toFixed(4)}</strong></div>
         </div>
       </div>`;
@@ -2202,7 +2213,7 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('beforeunload', (e) => {
   if (isRecording) {
     e.preventDefault();
-    e.returnValue = 'Recording is in progress — leaving will discard the current chunk.';
+    e.returnValue = 'Recording is in progress. Leaving will discard the current chunk.';
     return e.returnValue;
   }
 });

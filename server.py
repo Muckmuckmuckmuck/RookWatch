@@ -1,6 +1,6 @@
 """
-RookWatch MVP — Continuous video recording + 15-min auto-batch analysis
-Single-worker prototype optimized for laptop browser testing.
+RookWatch MVP - Continuous video recording + 15-min auto-batch analysis.
+Single-worker prototype optimized for laptop and phone browser testing.
 """
 import os
 import json
@@ -16,9 +16,9 @@ from google import genai
 from google.genai import types
 
 # ============================================================
-#  Set GOOGLE_API_KEY env var or paste key below
+#  Set GOOGLE_API_KEY env var to enable AI analysis.
 #  Get one free at: https://aistudio.google.com/app/apikey
-API_KEY = os.environ.get("GOOGLE_API_KEY", "PASTE_YOUR_API_KEY_HERE")
+API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 # ============================================================
 
 # Pricing for cost estimation (Gemini 2.5 Flash-Lite, $0.10/1M input tokens)
@@ -59,10 +59,10 @@ MIN_TASK_DURATION = 3
 
 app = Flask(__name__)
 CORS(app)
-app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200MB max upload (covers 15-min 720p chunks)
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max upload (covers ~15-min 720p chunks)
 
 client = None
-if API_KEY and API_KEY != "PASTE_YOUR_API_KEY_HERE":
+if API_KEY:
     client = genai.Client(api_key=API_KEY)
 
 # ---- Single-worker session state (MVP) ----
@@ -131,7 +131,7 @@ def analyze_video_chunk(file_path, duration_seconds, audio_enabled, chunk_index)
 
         prompt = f"""You are an AI work tracker analyzing a {duration_seconds:.0f}-second video clip of a person.
 
-Your job is to detect EVERY observable action they performed and log it as a discrete task — no matter how small.
+Your job is to detect EVERY observable action they performed and log it as a discrete task, no matter how small.
 
 This applies to ANY job category:
 - Manual labor: "Hammered nail into board", "Sawed wood plank", "Carried supplies"
@@ -141,14 +141,14 @@ This applies to ANY job category:
 - Retail: "Scanned item", "Bagged groceries", "Restocked shelf"
 - Anything else observable: ANY discrete action counts
 
-{"You can hear audio. Use spoken context (e.g. 'taking your order', 'I'm done', 'next page') to identify tasks more accurately." if audio_enabled else "Video only — no audio analysis available."}
+{"You can hear audio. Use spoken context (e.g. 'taking your order', 'I'm done', 'next page') to identify tasks more accurately." if audio_enabled else "Video only. No audio analysis available."}
 
 CRITICAL RULES:
-1. Log every distinct action — even small ones like "flipped page" or "moved cup"
-2. Use the visible action verbs — be SPECIFIC about what was done
-3. If you see ANY observable action, the worker is "active" — don't mark idle just because work seems light
+1. Log every distinct action, even small ones like "flipped page" or "moved cup"
+2. Use the visible action verbs. Be SPECIFIC about what was done
+3. If you see ANY observable action, the worker is "active". Do not mark idle just because work seems light
 4. For a {duration_seconds:.0f}-second clip, expect to log multiple distinct tasks
-5. Estimate task durations realistically — most micro-actions are 3-15 seconds
+5. Estimate task durations realistically. Most micro-actions are 3-15 seconds
 
 Return ONLY valid JSON, no markdown, no preamble:
 
@@ -239,6 +239,11 @@ If the video shows ANY person doing ANY action, you MUST return at least one tas
 
 @app.route("/")
 def home():
+    return render_template("pitch.html")
+
+
+@app.route("/demo")
+def demo():
     return render_template("index.html")
 
 
@@ -272,7 +277,11 @@ def upload_chunk():
             if session["shift_start"] is None:
                 session["shift_start"] = datetime.now()
             session["audio_enabled"] = audio_on
-            chunk_index = len(session["chunks"]) + 1
+            # Reserve a slot atomically to prevent two simultaneous uploads
+            # from getting the same chunk_index
+            session["chunks"].append({"_pending": True})
+            chunk_slot = len(session["chunks"]) - 1
+            chunk_index = chunk_slot + 1  # human-friendly 1-based index
 
         cost = estimate_cost(duration, audio_on)
         result = analyze_video_chunk(tmp.name, duration, audio_on, chunk_index)
@@ -282,20 +291,37 @@ def upload_chunk():
         result["is_final"] = is_final
         result["timestamp"] = datetime.now().strftime("%I:%M:%S %p")
 
+        # Coerce total_value to a number in case AI returned a string
+        try:
+            chunk_value = float(result.get("total_value", 0) or 0)
+        except (TypeError, ValueError):
+            chunk_value = 0.0
+        result["total_value"] = round(chunk_value, 2)
+
         with lock:
-            session["chunks"].append(result)
-            session["total_value"] += result.get("total_value", 0)
+            # Replace the reserved slot
+            if 0 <= chunk_slot < len(session["chunks"]):
+                session["chunks"][chunk_slot] = result
+            else:
+                session["chunks"].append(result)
+            session["total_value"] += chunk_value
             session["total_cost"] += cost
             session["total_video_seconds"] += duration
             if is_final:
                 session["shift_ended"] = True
+            # Bound memory: keep last 500 chunks (8+ hours at 1/min)
+            if len(session["chunks"]) > 500:
+                session["chunks"] = session["chunks"][-500:]
+            current_total_value = round(session["total_value"], 2)
+            current_total_cost = round(session["total_cost"], 6)
+            current_chunk_count = len(session["chunks"])
 
         return jsonify({
             "success": True,
             "chunk": result,
-            "session_total_value": round(session["total_value"], 2),
-            "session_total_cost": round(session["total_cost"], 6),
-            "chunk_count": len(session["chunks"]),
+            "session_total_value": current_total_value,
+            "session_total_cost": current_total_cost,
+            "chunk_count": current_chunk_count,
         })
 
     finally:
@@ -310,15 +336,17 @@ def upload_chunk():
 def status():
     """Return current session state."""
     with lock:
+        # Filter out reserved placeholders that haven't been filled yet
+        completed = [c for c in session["chunks"] if not c.get("_pending")]
         return jsonify({
             "shift_start": session["shift_start"].isoformat() if session["shift_start"] else None,
             "shift_ended": session["shift_ended"],
             "total_value": round(session["total_value"], 2),
             "total_cost": round(session["total_cost"], 6),
             "total_video_seconds": session["total_video_seconds"],
-            "chunk_count": len(session["chunks"]),
+            "chunk_count": len(completed),
             "audio_enabled": session["audio_enabled"],
-            "chunks": session["chunks"],
+            "chunks": completed,
         })
 
 
@@ -407,7 +435,7 @@ Return ONLY valid JSON, no markdown:
             "headline": "Shift complete",
             "narrative": f"Recorded {len(chunks)} chunks totaling {duration_min:.0f} minutes. Analysis summary unavailable: {str(e)[:100]}",
             "highlights": [],
-            "productivity_score": "—",
+            "productivity_score": "·",
             "improvement_areas": []
         })
 
@@ -422,14 +450,15 @@ def health():
 
 
 if __name__ == "__main__":
-    print("\n" + "═" * 60)
-    print("  WORKVERIFY MVP — Continuous Video Analysis")
-    print("═" * 60)
-    print(f"\n  💻  Recording  → http://localhost:5000")
-    print(f"  📊  Report     → http://localhost:5000/report")
-    print(f"  🩺  Health     → http://localhost:5000/health")
-    print(f"\n  Model: gemini-2.5-flash-lite-preview-06-17")
-    print(f"  Auto-upload every: 15 minutes (configurable in UI)")
-    print("═" * 60 + "\n")
     port = int(os.environ.get("PORT", 5000))
+    print("\n" + "=" * 60)
+    print("  RookWatch MVP - Continuous Video Analysis")
+    print("=" * 60)
+    print(f"\n  Pitch site  -> http://localhost:{port}/")
+    print(f"  Recording   -> http://localhost:{port}/demo")
+    print(f"  Report      -> http://localhost:{port}/report")
+    print(f"  Health      -> http://localhost:{port}/health")
+    print(f"\n  Model: gemini-flash-lite-latest")
+    print(f"  API key configured: {bool(client)}")
+    print("=" * 60 + "\n")
     app.run(host="0.0.0.0", port=port, debug=False)

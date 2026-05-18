@@ -523,16 +523,16 @@ header {
       <div class="brand-mark">Rook<em>Watch</em></div>
       <div class="brand-tag">Shift Report</div>
     </div>
-    <a href="/" class="back-link">← Back to Recording</a>
+    <a href="/demo" class="back-link">← Back to Recording</a>
   </header>
 
   <!-- TITLE -->
   <div class="report-title">
-    <div class="kicker">Generated <span id="generated-time">—</span></div>
+    <div class="kicker">Generated <span id="generated-time">·</span></div>
     <h1>Today's <em>shift</em> report</h1>
     <div class="report-meta">
-      <span>Started: <strong id="meta-start">—</strong></span>
-      <span>Duration: <strong id="meta-duration">—</strong></span>
+      <span>Started: <strong id="meta-start">·</strong></span>
+      <span>Duration: <strong id="meta-duration">·</strong></span>
       <span>Status: <strong id="meta-status">In Progress</strong></span>
     </div>
   </div>
@@ -548,7 +548,7 @@ header {
       <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
         <div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:rgba(250,248,243,0.4);margin-bottom:8px">PRODUCTIVITY SCORE</div>
-          <div id="summary-score" style="font-family:'Fraunces',serif;font-style:italic;font-size:48px;color:var(--accent);line-height:1">—</div>
+          <div id="summary-score" style="font-family:'Fraunces',serif;font-style:italic;font-size:48px;color:var(--accent);line-height:1">·</div>
         </div>
         <div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:rgba(250,248,243,0.4);margin-bottom:8px">HIGHLIGHTS</div>
@@ -731,7 +731,7 @@ async function fetchAndRender() {
     document.getElementById('h-hourly').textContent = hourly;
     document.getElementById('h-hourly-sub').textContent = 'Estimated';
   } else {
-    document.getElementById('h-hourly').textContent = '—';
+    document.getElementById('h-hourly').textContent = '·';
     document.getElementById('h-hourly-sub').textContent = `Need ${(5 - minutes).toFixed(1)} more min for estimate`;
   }
 
@@ -924,6 +924,17 @@ function clearEmptyChartOverlay(canvas) {
   if (overlay) overlay.remove();
 }
 
+// Escape HTML entities to prevent any injection from AI/server output
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function renderTimeline(chunks) {
   const allTasks = [];
   chunks.forEach((c, ci) => {
@@ -942,10 +953,10 @@ function renderTimeline(chunks) {
 
   container.innerHTML = allTasks.map(t => `
     <div class="timeline-item">
-      <div class="timeline-time">${t.chunk_time || '—'}<br><small style="color:var(--ink-3)">chunk ${t.chunk_index}</small></div>
+      <div class="timeline-time">${esc(t.chunk_time) || '·'}<br><small style="color:var(--ink-3)">chunk ${t.chunk_index}</small></div>
       <div class="timeline-body">
-        <div class="timeline-task">${t.name}</div>
-        <div class="timeline-detail">${t.details || ''}</div>
+        <div class="timeline-task">${esc(t.name)}</div>
+        <div class="timeline-detail">${esc(t.details)}</div>
       </div>
       <div class="timeline-value">$${(t.dollar_value || 0).toFixed(0)}</div>
     </div>
@@ -959,7 +970,7 @@ async function resetSession() {
     if (!res.ok) throw new Error('Reset failed: ' + res.status);
     setTimeout(fetchAndRender, 200);
   } catch (e) {
-    alert('Could not reset session — check the server is running.');
+    alert('Could not reset session. Check the server is running.');
     console.error(e);
   }
 }
@@ -988,19 +999,19 @@ async function loadSummary(forceReload) {
 
     document.getElementById('summary-headline').textContent = data.headline || 'Shift complete';
     document.getElementById('summary-narrative').textContent = data.narrative || '';
-    document.getElementById('summary-score').textContent = data.productivity_score || '—';
+    document.getElementById('summary-score').textContent = data.productivity_score || '·';
 
     const hl = document.getElementById('summary-highlights');
     const items = data.highlights || [];
     hl.innerHTML = items.length > 0
-      ? items.map(h => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:var(--accent)">·</span>${h}</li>`).join('')
+      ? items.map(h => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:var(--accent)">·</span>${esc(h)}</li>`).join('')
       : '<li style="opacity:0.5;font-style:italic">No specific highlights noted.</li>';
 
     const impArea = document.getElementById('summary-improvements');
     const impList = document.getElementById('summary-improvements-list');
     if (data.improvement_areas && data.improvement_areas.length > 0) {
       impArea.style.display = 'block';
-      impList.innerHTML = data.improvement_areas.map(s => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:rgba(250,248,243,0.5)">·</span>${s}</li>`).join('');
+      impList.innerHTML = data.improvement_areas.map(s => `<li style="padding-left:14px;position:relative;margin-bottom:6px"><span style="position:absolute;left:0;color:rgba(250,248,243,0.5)">·</span>${esc(s)}</li>`).join('');
     } else {
       impArea.style.display = 'none';
     }
